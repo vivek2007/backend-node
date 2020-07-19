@@ -4,6 +4,7 @@ const moment = require('moment-timezone')
 const mongoose = require("mongoose")
 const bcrypt = require('bcryptjs')
 const jwt = require('jwt-simple')
+const { v4: uuidv4 } = require('uuid')
 require('dotenv').config()
 const jwtSecret = process.env.JWT_SECRET
 const jwtExpirationInterval = process.env.JWT_EXPIRATION_DAYS
@@ -48,13 +49,13 @@ exports.register = async (req, res) => {
 			{
 				User.create(req.body).then(async user => {
 					sendVerificationEmail(req.get('host'),email,username,user.uuid)
-					user.password = await bcrypt.hash(password, 10)
-					user.token = generateToken(user)
-					user.save()
+					password = await bcrypt.hash(password, parseInt(process.env.SALT_ROUNDS))
+					let token = generateToken(user)
+					await User.updateOne({_id:user._id},{$set:{password:password,token:token}}).exec()
 					user = await User.findOne({_id:user._id},{token:1,email:1,username:1}).exec()
 					return res.status(200).json({
 						status:1,
-						message: `User registered successfully`,
+						message: `User registered successfully. A verification link has been sent to your email address. Please verify`,
 						user
 					})
 				})
@@ -145,7 +146,7 @@ exports.verifyEmail = async (req,res) => {
 		{
 			return res.send(`Invalid credentials`)
 		}
-		let user = await User.findOne({uuid:token},{email:1,createdAt:1,isDeleted:1,emailVerified:1}).exec()
+		let user = await User.findOne({uuid:token},{email:1,updatedAt:1,isDeleted:1,emailVerified:1}).exec()
 		if(user)
 		{
 			if(user.isDeleted)
@@ -157,8 +158,9 @@ exports.verifyEmail = async (req,res) => {
 				return res.send(`Email already verified. Please login and continue`)
 			}
 			let currentTime = new Date().getTime()
-			let createdAt = new Date(user.createdAt).getTime()
-			let timeDifference = parseInt((currentTime - createdAt) / 60000)
+			let updatedAt = new Date(user.updatedAt).getTime()
+			let timeDifference = parseInt((currentTime - updatedAt) / 60000)
+			console.log(`timeDifference ${timeDifference}, parseInt(process.env.EMAIL_EXPIRY) ${parseInt(process.env.EMAIL_EXPIRY)}`)
 			if(timeDifference <= parseInt(process.env.EMAIL_EXPIRY))
 			{
 				await User.updateOne({uuid:token},{$set:{emailVerified:true}}).exec()
@@ -190,9 +192,8 @@ exports.forgotPassword = async (req,res) => {
 		{
 			if(user.emailVerified)
 			{
-				const { v4: uuidv4 } = require('uuid')
 				let uuid = uuidv4()
-				await User.updateOne({email:email,isDeleted:false},{$set:{uuid:uuid}}).exec()
+				await User.updateOne({email:email,isDeleted:false},{$set:{uuid:uuid,updatedAt:new Date()}}).exec()
 				sendResetPassword(req.get('host'),email,user.username,uuid)
 				return res.status(200).json({
 					status:1,
@@ -224,4 +225,78 @@ exports.forgotPassword = async (req,res) => {
 	}
 }
 
+exports.changePassword = async (req,res) => {
+	try
+	{
+		let { id, password } = req.body
+		let status = 0
+		let user = await User.findOne({uuid:id},{email:1,isDeleted:1}).exec()
+		if(user)
+		{
+			password = await bcrypt.hash(password, parseInt(process.env.SALT_ROUNDS))
+			await User.updateOne({email:user.email},{$set:{password:password,updatedAt:new Date()}}).exec()
+			return res.status(200).json({
+				status:1,
+				message: `Password changed successfully`
+			})
+		}
+		else
+		{
+			return res.status(404).json({
+				status,
+				message: `User not found`
+			})
+		}
+		
+	}
+	catch (error) 
+	{
+		return res.status(500).json({
+			status: 0,
+			message: `${error.message}`
+		})
+	}
+}
 
+exports.resendEmailVerification = async (req,res) => {
+	try
+	{
+		let { email } = req.body
+		let status = 0
+		let user = await User.findOne({email:email,isDeleted:false},{username:1,isDeleted:1,emailVerified:1}).exec()
+		if(user)
+		{
+			if(!user.emailVerified)
+			{
+				let uuid = uuidv4()
+				await User.updateOne({email:email,isDeleted:false},{$set:{uuid:uuid,updatedAt:new Date()}}).exec()
+				sendVerificationEmail(req.get('host'),email,user.username,uuid)
+				return res.status(200).json({
+					status:1,
+					message: `A verification link has been sent to your email address. Please verify`
+				})
+			}
+			else
+			{
+				return res.status(200).json({
+					status,
+					message: `Email already verified.`
+				})
+			}
+		}
+		else
+		{
+			return res.status(200).json({
+				status:1,
+				message: `A verification link has been sent to your email address. Please verify`
+			})
+		}
+	}
+	catch (error) 
+	{
+		return res.status(500).json({
+			status: 0,
+			message: `${error.message}`
+		})
+	}
+}

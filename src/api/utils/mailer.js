@@ -13,17 +13,17 @@ const smtpTransport = nodemailer.createTransport({
 
 module.exports.sendVerificationEmail = async (host,email,username,token) => {
 	console.log(`in sendVerificationEmail\nhost ${host},email ${email},username ${username},token ${token}`)
-	let link = `http://${host}/v1/auth/verify?id=${token}`
+	let link = `http://${host}/v1/auth/verify/${token}`
 	let mailOptions={
         to : email,
-        subject : `Please confirm your Email account`,
+        subject : `Verify Email`,
         html : `Dear ${username},<br> Please click <a href="${link}">here</a> to verify your email.`
     }
     smtpTransport.sendMail(mailOptions, function(error, response){
 		if(error){
 			console.log(`Error in sending mail. Error: ${error}`)
 		}else{
-			console.log(`Mail sent: ${response}`)
+			console.log(`Mail sent: ${JSON.stringify(response)}`)
 		}
 	})
 }
@@ -40,7 +40,7 @@ module.exports.sendResetPassword = async (host,email,username,token) => {
 		if(error){
 			console.log(`Error in sending mail. Error: ${error}`)
 		}else{
-			console.log(`Mail sent: ${response}`)
+			console.log(`Mail sent: ${JSON.stringify(response)}`)
 		}
 	})
 }

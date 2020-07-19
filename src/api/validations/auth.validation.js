@@ -11,10 +11,23 @@ module.exports = {
       password: Joi.string().required().min(6).max(128),
     }),
   },
-  // POST /v1/auth/login
+  // POST /v1/auth/forgot-password
   forgotPassword: {
     body: Joi.object({
       email: Joi.string().required()
+    })
+  },
+  // POST /v1/auth/resend-email-verification
+  resendEmailVerification: {
+    body: Joi.object({
+      email: Joi.string().email().required()
+    })
+  },
+  // POST /v1/auth/change-password
+  changePassword: {
+    body: Joi.object({
+		id:Joi.string().required(),
+      password: Joi.string().required().min(6).max(128)
     })
   },
   // POST /v1/auth/login

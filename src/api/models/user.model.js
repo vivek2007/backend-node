@@ -37,6 +37,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  updatedAt:{
+    type: Date,
+    default: new Date()
+  },
   createdAt:{
     type: Date,
     default: new Date()
