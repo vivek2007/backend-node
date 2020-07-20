@@ -48,10 +48,11 @@ exports.register = async (req, res) => {
 			else
 			{
 				User.create(req.body).then(async user => {
-					sendVerificationEmail(req.get('host'),email,username,user.uuid)
+					let uuid = uuidv4()
+					sendVerificationEmail(req.get('host'),email,username,uuid)
 					password = await bcrypt.hash(password, parseInt(process.env.SALT_ROUNDS))
 					let token = generateToken(user)
-					await User.updateOne({_id:user._id},{$set:{password:password,token:token}}).exec()
+					await User.updateOne({_id:user._id},{$set:{uuid:uuid,password:password,token:token}}).exec()
 					user = await User.findOne({_id:user._id},{token:1,email:1,username:1}).exec()
 					return res.status(200).json({
 						status:1,

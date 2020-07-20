@@ -1,5 +1,4 @@
 const mongoose = require('mongoose')
-const { v4: uuidv4 } = require('uuid')
 
 const userSchema = new mongoose.Schema({
   email: {
@@ -16,7 +15,7 @@ const userSchema = new mongoose.Schema({
   },
   uuid : {
   	type: String,
-  	default:uuidv4()
+  	default:""
   },
   password: {
     type: String,
