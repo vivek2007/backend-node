@@ -2,6 +2,7 @@ const express = require('express')
 const { validate, ValidationError, Joi } = require('express-validation')
 const mongoose = require('mongoose')
 const promise = require('bluebird')
+const cors = require('cors')
 require('dotenv').config()
 const routes = require('./src/api/routes/v1')
 
@@ -9,6 +10,7 @@ const app = express()
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 app.use('/v1', routes)
+app.use(cors())
 
 app.use((err, req, res, next) => {
   if (err instanceof ValidationError) {
