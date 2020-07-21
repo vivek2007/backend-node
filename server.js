@@ -9,8 +9,9 @@ const routes = require('./src/api/routes/v1')
 const app = express()
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
-app.use('/v1', routes)
 app.use(cors())
+app.use('/v1', routes)
+
 
 app.use((err, req, res, next) => {
   if (err instanceof ValidationError) {

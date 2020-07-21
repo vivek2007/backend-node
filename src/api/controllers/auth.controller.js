@@ -28,7 +28,7 @@ exports.register = async (req, res) => {
 		let user = await User.findOne({email:email,isDeleted:false},{token:1}).exec()
 		if(user)
 		{
-			return res.status(400).json({
+			return res.status(200).json({
 				status,
 				message: `Email already registered`,
 				user:{}
@@ -39,7 +39,7 @@ exports.register = async (req, res) => {
 			user = await User.findOne({username:username,isDeleted:false},{token:1}).exec()
 			if(user)
 			{
-				return res.status(400).json({
+				return res.status(200).json({
 					status,
 					message: `Username already registered`,
 					user:{}
