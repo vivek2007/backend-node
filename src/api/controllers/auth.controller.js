@@ -76,10 +76,12 @@ exports.login = async (req, res) => {
 	try 
 	{
 		let { email, password } = req.body
+		console.log(req.body,'rrr')
 		email = email.toLowerCase()
 		let status = 0
 		email = email.toLowerCase()
 		let user = await User.findOne({$or:[{email:email},{username:email}]}).exec()
+		console.log(user,'user')
 		if(user)
 		{
 			if(user.isDeleted)
@@ -114,7 +116,7 @@ exports.login = async (req, res) => {
 			}
 			else
 			{
-				return res.status(400).json({
+				return res.status(200).json({
 					status,
 					message: `Invalid credentials`,
 					user:{}
@@ -123,7 +125,7 @@ exports.login = async (req, res) => {
 		}
 		else
 		{
-			return res.status(400).json({
+			return res.status(200).json({
 				status,
 				message: `Invalid credentials`,
 				user:{}
