@@ -52,8 +52,9 @@ exports.register = async (req, res) => {
 					sendVerificationEmail(req.get('host'),email,username,uuid)
 					password = await bcrypt.hash(password, parseInt(process.env.SALT_ROUNDS))
 					let token = generateToken(user)
-					await User.updateOne({_id:user._id},{$set:{uuid:uuid,password:password,token:token}}).exec()
-					user = await User.findOne({_id:user._id},{token:1,email:1,username:1}).exec()
+					let referralCode = Math.random().toString(36).slice(2).toUpperCase()
+					await User.updateOne({_id:user._id},{$set:{uuid:uuid,password:password,token:token,referralCode:referralCode}}).exec()
+					user = await User.findOne({_id:user._id},{token:1,email:1,username:1,referralCode:1}).exec()
 					return res.status(200).json({
 						status:1,
 						message: `User registered successfully. A verification link has been sent to your email address. Please verify`,
