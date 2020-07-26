@@ -30,7 +30,7 @@ module.exports.sendVerificationEmail = async (host,email,username,token) => {
 
 module.exports.sendResetPassword = async (host,email,username,token) => {
 	console.log(`in sendResetPassword\nhost ${host},email ${email},username ${username},token ${token}`)
-	let link = `http://${host}/v1/auth/reset-password?id=${token}`
+	let link = `http://18.237.7.208:3001/change-password/${token}`
 	let mailOptions={
         to : email,
         subject : `Reset Password`,
